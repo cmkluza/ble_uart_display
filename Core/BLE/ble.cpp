@@ -39,11 +39,20 @@ enum class ExpansionBoard {
     IDB05A1,
 };
 
+enum class State {
+    IDLE,
+    ADVERTISING,
+    SCANNING,
+    CONNECTED,
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Private Data
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 static event_callback g_callbacks[CALLBACK_COUNT] {};
 static std::uint32_t g_callback_cnt {};
+// TODO: atomic state?
+static State g_state {};
 static Role g_ble_role {};
 static ExpansionBoard g_expansion_board { ExpansionBoard::IDB04A1 };
 static etl::vector<char, 31> g_adv_name {};
@@ -174,6 +183,10 @@ bool init(Role role) {
 namespace advertising {
 
     bool start() {
+        if (g_state == State::ADVERTISING) {
+            return true; // already advertising TODO: need actual error codes
+        }
+
         hci_le_set_scan_resp_data(0, nullptr);
 
         const auto name_adv_len = g_adv_name.size();
@@ -224,14 +237,22 @@ namespace advertising {
             return false;
         }
 
+        g_state = State::ADVERTISING;
+
         return true;
     }
 
     void stop() {
+        if (g_state != State::ADVERTISING) {
+            return;
+        }
+
         auto ret = aci_gap_set_non_discoverable();
         if (ret != BLE_STATUS_SUCCESS) {
             printf("%s: Set non-discoverable failed: %02X\n", __func__, ret);
         }
+
+        g_state = State::IDLE;
     }
 
     void clear() {
@@ -313,6 +334,7 @@ void thread(void *arg) {
 // Private Implementations
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// TODO: update state
 static void process_aci_packet(void *data) {
 	for (std::uint32_t i = 0; i < g_callback_cnt; ++i) {
 		g_callbacks[i](data);
