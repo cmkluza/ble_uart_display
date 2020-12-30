@@ -44,7 +44,7 @@ local.properties
 .loadpath
 .recommenders
 
-External tool builders
+# External tool builders
 .externalToolBuilders/
 
 # Locally stored "Eclipse launch configurations"
@@ -88,3 +88,7 @@ External tool builders
 .cache-main
 .scala_dependencies
 .worksheet
+
+# Build output
+Debug/
+Release/
