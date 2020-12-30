@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "uart_retarget.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -142,6 +142,9 @@ int main(void)
   MX_USB_PCD_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  /* Setup printf to go over UART */
+  uart_retarget_init(&huart1);
 
   /* Jump into my main instead of that loop. */
   return main_cpp();
