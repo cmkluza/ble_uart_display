@@ -9,6 +9,7 @@
 
 #include "main.h"
 #include "ble.h"
+#include "bleuart.h"
 
 #include <cstdio>
 
@@ -16,7 +17,7 @@ using ble::Role;
 
 extern "C" int main_cpp()
 {
-    /* Hardware init done by CubeMX generated main
+    /* Hardware init done by the CubeMX-generated main.c,
      * only need to init app stuff here. */
 
     // Initialize the BLE as a server
@@ -25,16 +26,18 @@ extern "C" int main_cpp()
         Error_Handler();
     }
 
-    // advertise a name to see if we're even started yet
-    if (!ble::advertising::add_name("Hello!")) {
-        printf("Couldn't add BLE name, spinning\n");
+    ble_uart uart {};
+    if (!uart.init()) {
+        printf("Couldn't init BLE UART\n");
         Error_Handler();
     }
 
-    if (!ble::advertising::start()) {
-        printf("Couldn't start BLE advertising, spinning\n");
+    if (!uart.advertise("UART Test")) {
+        printf("Couldn't start advertising UART service\n");
         Error_Handler();
     }
+
+    printf("BLE UART setup\n");
 
     while (1) {
         ble::process_events();
