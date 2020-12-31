@@ -27,6 +27,7 @@ extern "C" int main_cpp()
     }
 
     ble_uart uart {};
+
     if (!uart.init()) {
         printf("Couldn't init BLE UART\n");
         Error_Handler();
@@ -39,7 +40,33 @@ extern "C" int main_cpp()
 
     printf("BLE UART setup\n");
 
+    char in_buffer[128] {};
+    char out_buffer[128] {};
+    std::uint8_t out_buffer_idx {};
+
     while (1) {
         ble::process_events();
+
+        auto c = getchar();
+        if (c > 0) {
+            out_buffer[out_buffer_idx] = static_cast<char>(c);
+            if ((out_buffer[out_buffer_idx] == '\r' || out_buffer[out_buffer_idx] == '\n') &&
+                    out_buffer_idx > 0) {
+                out_buffer[out_buffer_idx] = '\0';
+                printf("send: %s\n", out_buffer);
+                uart.write(out_buffer, out_buffer_idx);
+                out_buffer_idx = 0;
+            } else {
+                ++out_buffer_idx;
+            }
+        }
+
+        if (uart.available() > 0) {
+            auto read = uart.read(in_buffer, static_cast<std::uint8_t>(sizeof(in_buffer)));
+            if (read > 0) {
+                in_buffer[read] = '\0';
+                printf("recv: %s\n", in_buffer);
+            }
+        }
     }
 }

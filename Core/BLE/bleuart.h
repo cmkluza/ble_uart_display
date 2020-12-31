@@ -5,11 +5,17 @@
  * from Arduino. For RX, uses a single-producer, single-consumer queue filled by BLE. So, there
  * should only be one owner reading from a given BLE UART instance at any given time.
  *
+ * Currently acts as GAP server/GATT peripheral only.
+ *
  * Copyright (c) 2020 Cameron Kluza
  * Distributed under the MIT license (see LICENSE or https://opensource.org/licenses/MIT)
  */
 
 #pragma once
+
+extern "C" {
+#   include <bluenrg_aci_const.h>
+}
 
 #include <etl/queue_spsc_atomic.h>
 
@@ -82,29 +88,32 @@ public:
 	 * @param     amount the number of characters to read.
 	 * @return           actual number of characters read.
 	 */
-	std::size_t read(char *dest, std::size_t amount);
+	std::uint8_t read(char *dest, std::uint8_t amount);
 
 	/**
 	 * Writes a single character to a remote device.
 	 *
 	 * @param c the character to write.
+	 * @return  true if successful, else false.
 	 */
-	void write(char c);
+	bool write(char c);
 
 	/**
 	 * Writes a C-string to a remote device.
 	 *
 	 * @param[in] str the C-string to write.
+	 * @return        true if successful, else false.
 	 */
-	void write(const char *str);
+	bool write(const char *str);
 
 	/**
 	 * Writes a given amount of characters to a remote device.
 	 *
 	 * @param[in] src    array of characters to write.
 	 * @param     amount the number of characters to write.
+	 * @return           true if successful, else false.
 	 */
-	void write(const char *src, std::size_t amount);
+	bool write(const char *src, std::uint8_t amount);
 
 private:
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,4 +128,25 @@ private:
 	std::uint16_t _service_handle;
 	std::uint16_t _rx_handle;
 	std::uint16_t _tx_handle;
+
+private:
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Private Functions
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Callback registered to handle BLE events.
+	 *
+	 * @param[in] context    a pointer to associated instance (i.e. "this").
+	 * @param[in] hci_packet BLE event data.
+	 */
+	static void event_callback(void *context, hci_uart_pckt *hci_packet);
+
+	/**
+	 * Callback for vendor-specific subset of events.
+	 *
+	 * @param[in] event the event data.
+	 * @param[in] _this pointer to associated instance.
+	 */
+	static void vendor_callback(evt_blue_aci *event, ble_uart *_this);
 };

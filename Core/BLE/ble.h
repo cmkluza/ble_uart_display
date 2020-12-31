@@ -9,6 +9,10 @@
 
 #pragma once
 
+extern "C" {
+#   include <hci_const.h>
+}
+
 #include <cstdint>
 
 namespace ble {
@@ -42,11 +46,16 @@ struct UUID {
     };
 };
 
+enum class ExpansionBoard {
+    UNKNOWN,
+    IDB04A1,
+    IDB05A1,
+};
+
 /**
- * Callback for when events occur. The parameter type is actually
- * "hci_uart_pckt *" but STM uses "void *" for some reason...
+ * Callback for when events occur.
  */
-using event_callback = void (*)(void *data);
+using event_callback = void (*)(void *context, hci_uart_pckt *data);
 
 /* Number of event callbacks that can be registered. */
 constexpr inline std::uint32_t CALLBACK_COUNT { 10 };
@@ -61,9 +70,17 @@ constexpr inline auto BDADDR_SIZE { 6 };
 /**
  * Initialize the BLE hardware.
  *
- * @return true if successful, false otherwise (TODO: actual error codes?)
+ * @param role whether the device should be initialized as a GAP central server or client.
+ * @return     true if successful, false otherwise (TODO: actual error codes?)
  */
 bool init(Role role);
+
+/**
+ * Gets the type of expansion board being used.
+ *
+ * @return type of expansion board used.
+ */
+ExpansionBoard board();
 
 namespace advertising {
     /**
@@ -82,8 +99,8 @@ namespace advertising {
     /**
      * Adds a local name to the advertising data.
      *
-     * @param[in] name: C-string containing device name to advertise.
-     * @return true if successful, else false.
+     * @param[in] name C-string containing device name to advertise.
+     * @return         true if successful, else false.
      */
     bool add_name(const char *name);
 
@@ -91,8 +108,8 @@ namespace advertising {
      * Adds a 16-bit UUID to the advertising data. UUIDs will not be advertised
      * as the complete list.
      *
-     * @param[in] uuid the 16-bit UUID to advertise.
-     * @return true if successful, else false.
+     * @param uuid the 16-bit UUID to advertise.
+     * @return     true if successful, else false.
      */
     bool add_uuid16(std::uint16_t uuid);
 
@@ -101,7 +118,7 @@ namespace advertising {
      * as the complete list.
      *
      * @param[in] uuid array of 16 bytes in a 128-bit UUID to advertise.
-     * @return true if successful, else false.
+     * @return         true if successful, else false.
      */
     bool add_uuid128(const std::uint8_t *uuid);
 } /* namespace advertising */
@@ -112,8 +129,11 @@ void scan();
 
 /**
  * Register a callback to be called when BLE events come in
+ *
+ * @param     callback function pointer to be called when events happen.
+ * @param[in] context  context passed when callbacks are triggered.
  */
-void register_callback(event_callback callback);
+void register_callback(event_callback callback, void *context);
 
 /**
  * Processes BLE events. Should be called from a main event loop repeatedly.

@@ -10,21 +10,22 @@
 #include "ble.h"
 
 extern "C" {
-    #include <stm32l5xx_hal.h>
+#   include <stm32l5xx_hal.h>
 
-    #include <bluenrg_conf.h>
-    #include <bluenrg_gap.h>
-    #include <bluenrg_gap_aci.h>
-    #include <bluenrg_gatt_aci.h>
-    #include <bluenrg_hal_aci.h>
-    #include <bluenrg_utils.h>
-    #include <hci.h>
-    #include <hci_le.h>
-    #include <sm.h>
+#   include <bluenrg_conf.h>
+#   include <bluenrg_gap.h>
+#   include <bluenrg_gap_aci.h>
+#   include <bluenrg_gatt_aci.h>
+#   include <bluenrg_hal_aci.h>
+#   include <bluenrg_utils.h>
+#   include <hci.h>
+#   include <hci_le.h>
+#   include <sm.h>
 }
 
 #include <etl/vector.h>
 
+#include <atomic>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -34,10 +35,6 @@ namespace ble {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Private Types
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-enum class ExpansionBoard {
-    IDB04A1,
-    IDB05A1,
-};
 
 enum class State {
     IDLE,
@@ -49,12 +46,21 @@ enum class State {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Private Data
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+/** Callback state. */
 static event_callback g_callbacks[CALLBACK_COUNT] {};
+static void *g_contexts[CALLBACK_COUNT] {};
 static std::uint32_t g_callback_cnt {};
-// TODO: atomic state?
-static State g_state {};
+
+/** BLE state. */
+static std::atomic<State> g_state {};
+
+/** Configured BLE role. */
 static Role g_ble_role {};
-static ExpansionBoard g_expansion_board { ExpansionBoard::IDB04A1 };
+
+/** Expansion board version. */
+static ExpansionBoard g_expansion_board { ExpansionBoard::UNKNOWN };
+
+/** Advertising state. */
 static etl::vector<char, 31> g_adv_name {};
 static etl::vector<std::uint8_t, 31> g_adv_uuid16s {};
 static etl::vector<std::uint8_t, 31> g_adv_uuid128s {};
@@ -82,7 +88,9 @@ bool init(Role role) {
 	getBlueNRGVersion(&hwVersion, &fwVersion);
 	printf("HWver %d, FWver %d\n", hwVersion, fwVersion);
     if (hwVersion > 0x30) { /* X-NUCLEO-IDB05A1 expansion board is used */
-      g_expansion_board = ExpansionBoard::IDB05A1;
+        g_expansion_board = ExpansionBoard::IDB05A1;
+    } else {
+        g_expansion_board = ExpansionBoard::IDB04A1;
     }
 
 	/*
@@ -115,8 +123,6 @@ bool init(Role role) {
 	    printf("%s: GATT init failed: %02X\n", __func__, ret);
 	    return false;
 	}
-
-
 
 	/* Determine the GAP role based on BLE role and expansion board. */
 	std::uint8_t gap_role;
@@ -180,6 +186,10 @@ bool init(Role role) {
     return true;
 }
 
+ExpansionBoard board() {
+    return g_expansion_board;
+}
+
 namespace advertising {
 
     bool start() {
@@ -211,12 +221,12 @@ namespace advertising {
 
         if (uuid16_adv_len != 0) {
             std::memcpy(&uuids[uuid_len], g_adv_uuid16s.data(), uuid16_adv_len);
-            uuid_len += static_cast<std::uint8_t>(uuid16_adv_len);
+            uuid_len = static_cast<std::uint8_t>(uuid16_adv_len + uuid_len);
         }
 
         if (uuid128_adv_len != 0) {
             std::memcpy(&uuids[uuid_len], g_adv_uuid128s.data(), uuid128_adv_len);
-            uuid_len += static_cast<std::uint8_t>(uuid128_adv_len);
+            uuid_len = static_cast<std::uint8_t>(uuid128_adv_len + uuid_len);
         }
 
         auto ret = aci_gap_set_discoverable(
@@ -311,9 +321,10 @@ namespace advertising {
 
 } /* namespace advertising */
 
-void register_callback(event_callback callback) {
+void register_callback(event_callback callback, void *context) {
 	if (g_callback_cnt < CALLBACK_COUNT) {
 		g_callbacks[g_callback_cnt] = callback;
+		g_contexts[g_callback_cnt] = context;
 		++g_callback_cnt;
 	}
 }
@@ -336,8 +347,42 @@ void thread(void *arg) {
 
 // TODO: update state
 static void process_aci_packet(void *data) {
+    auto *event = reinterpret_cast<hci_uart_pckt *>(data);
+
 	for (std::uint32_t i = 0; i < g_callback_cnt; ++i) {
-		g_callbacks[i](data);
+		g_callbacks[i](g_contexts[i], event);
+	}
+
+	if (event->type != HCI_EVENT_PKT) {
+	    return;
+	}
+
+	auto *hci_packet = reinterpret_cast<hci_event_pckt *>(event->data);
+
+	switch (hci_packet->evt) {
+
+	    case EVT_DISCONN_COMPLETE: {
+	        printf("Disconnected\n");
+	    } break;
+
+	    case EVT_LE_META_EVENT: {
+            auto *le_event = reinterpret_cast<evt_le_meta_event *>(hci_packet->data);
+
+	        switch (le_event->subevent) {
+
+	            case EVT_LE_CONN_COMPLETE: {
+	                auto *conn_event =
+	                        reinterpret_cast<evt_le_connection_complete *>(le_event->data);
+	                auto *addr = conn_event->peer_bdaddr;
+	                printf("Connected to: %02X:%02X:%02X:%02X:%02X:%02X (%d)\n",
+	                        addr[5], addr[4], addr[3], addr[2], addr[1], addr[0],
+	                        conn_event->handle);
+	            } break;
+
+	        }
+
+	    } break;
+
 	}
 }
 
