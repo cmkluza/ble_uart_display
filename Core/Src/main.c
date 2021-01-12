@@ -117,6 +117,9 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
+    /* FreeRTOS API probably called during static CTORs... re-enable interrupts */
+    portENABLE_INTERRUPTS();
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/

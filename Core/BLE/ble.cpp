@@ -23,11 +23,12 @@ extern "C" {
 #   include <sm.h>
 }
 
+#include "logger.h"
+
 #include <etl/vector.h>
 
 #include <atomic>
 #include <cstdint>
-#include <cstdio>
 #include <cstring>
 
 namespace ble {
@@ -86,7 +87,7 @@ bool init(Role role) {
 	uint8_t  hwVersion;
 	uint16_t fwVersion;
 	getBlueNRGVersion(&hwVersion, &fwVersion);
-	printf("HWver %d, FWver %d\n", hwVersion, fwVersion);
+	logger::log("HWver %d, FWver %d\n", hwVersion, fwVersion);
     if (hwVersion > 0x30) { /* X-NUCLEO-IDB05A1 expansion board is used */
         g_expansion_board = ExpansionBoard::IDB05A1;
     } else {
@@ -114,13 +115,13 @@ bool init(Role role) {
                                          bdaddr);
 
 	if (ret) {
-	    printf("%s: Set public address failed: %02X\n", __func__, ret);
+	    logger::log("%s: Set public address failed: %02X\n", __func__, ret);
 	    return false;
 	}
 
 	ret = aci_gatt_init();
 	if (ret) {
-	    printf("%s: GATT init failed: %02X\n", __func__, ret);
+	    logger::log("%s: GATT init failed: %02X\n", __func__, ret);
 	    return false;
 	}
 
@@ -156,7 +157,7 @@ bool init(Role role) {
     }
 
     if (ret != BLE_STATUS_SUCCESS) {
-        printf("%s: GAP init failed: %02X\n", __func__, ret);
+        logger::log("%s: GAP init failed: %02X\n", __func__, ret);
         return false;
     }
 
@@ -171,18 +172,18 @@ bool init(Role role) {
             BONDING);                  /* Bonding: enabled */
 
     if (ret != BLE_STATUS_SUCCESS) {
-        printf("%s: GAP set auth failed: %02X\n", __func__, ret);
+        logger::log("%s: GAP set auth failed: %02X\n", __func__, ret);
         return false;
     }
 
     /* Set output power level. */
     ret = aci_hal_set_tx_power_level(1, 4);
     if (ret != BLE_STATUS_SUCCESS) {
-        printf("%s: Set TX power failed: %02X\n", __func__, ret);
+        logger::log("%s: Set TX power failed: %02X\n", __func__, ret);
         return false;
     }
 
-    printf("%s: Successfully setup BLE\n", __func__);
+    logger::log("%s: Successfully setup BLE\n", __func__);
     return true;
 }
 
@@ -204,8 +205,8 @@ namespace advertising {
         const auto uuid128_adv_len = g_adv_uuid128s.size();
 
         if (name_adv_len + uuid16_adv_len + uuid128_adv_len > 31) {
-            printf("%s: too many bytes in advertising packet: %d",
-                    __func__, name_adv_len + uuid16_adv_len + uuid128_adv_len);
+            logger::log("%s: too many bytes in advertising packet: %d",
+                        __func__, name_adv_len + uuid16_adv_len + uuid128_adv_len);
             return false;
         }
 
@@ -243,7 +244,7 @@ namespace advertising {
                  0);                /* Max slave connection interval */
 
         if (ret != BLE_STATUS_SUCCESS) {
-            printf("%s: Set discoverable failed: %02X\n", __func__, ret);
+            logger::log("%s: Set discoverable failed: %02X\n", __func__, ret);
             return false;
         }
 
@@ -259,7 +260,7 @@ namespace advertising {
 
         auto ret = aci_gap_set_non_discoverable();
         if (ret != BLE_STATUS_SUCCESS) {
-            printf("%s: Set non-discoverable failed: %02X\n", __func__, ret);
+            logger::log("%s: Set non-discoverable failed: %02X\n", __func__, ret);
         }
 
         g_state = State::IDLE;
@@ -274,7 +275,7 @@ namespace advertising {
     bool add_name(const char *name) {
         auto len = std::strlen(name);
         if (len > 30) {
-            printf("%s: Name too long (%d > 30)\n", __func__, len);
+            logger::log("%s: Name too long (%d > 30)\n", __func__, len);
             return false;
         }
 
@@ -286,8 +287,8 @@ namespace advertising {
 
     bool add_uuid16(std::uint16_t uuid) {
         if (g_adv_uuid16s.size() + 2 > 31) {
-            printf("%s: Too many UUIDs (%d bytes)\n",
-                    __func__, g_adv_uuid16s.size() + 2);
+            logger::log("%s: Too many UUIDs (%d bytes)\n",
+                        __func__, g_adv_uuid16s.size() + 2);
             return false;
         }
 
@@ -303,8 +304,8 @@ namespace advertising {
 
     bool add_uuid128(const std::uint8_t *uuid) {
         if (g_adv_uuid128s.size() + 16 > 31) {
-            printf("%s: Too many UUIDs (%d bytes)\n",
-                    __func__, g_adv_uuid128s.size() + 16);
+            logger::log("%s: Too many UUIDs (%d bytes)\n",
+                        __func__, g_adv_uuid128s.size() + 16);
             return false;
         }
 
@@ -362,7 +363,7 @@ static void process_aci_packet(void *data) {
 	switch (hci_packet->evt) {
 
 	    case EVT_DISCONN_COMPLETE: {
-	        printf("Disconnected\n");
+	        logger::log("Disconnected\n");
 	    } break;
 
 	    case EVT_LE_META_EVENT: {
@@ -374,9 +375,9 @@ static void process_aci_packet(void *data) {
 	                auto *conn_event =
 	                        reinterpret_cast<evt_le_connection_complete *>(le_event->data);
 	                auto *addr = conn_event->peer_bdaddr;
-	                printf("Connected to: %02X:%02X:%02X:%02X:%02X:%02X (%d)\n",
-	                        addr[5], addr[4], addr[3], addr[2], addr[1], addr[0],
-	                        conn_event->handle);
+	                logger::log("Connected to: %02X:%02X:%02X:%02X:%02X:%02X",
+                                addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
+	                logger::log(" (%d)\n", conn_event->handle);
 	            } break;
 
 	        }
