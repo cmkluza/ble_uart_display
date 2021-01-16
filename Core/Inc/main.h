@@ -1,13 +1,12 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
+  * @file    main.h 
+  * @author  MCD Application Team
+  * @brief   Header for main.c module
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -17,11 +16,10 @@
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
-
+  
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
+#ifndef MAIN_H
+#define MAIN_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,7 +27,15 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l5xx_hal.h"
-#include "stm32l5xx_hal.h"
+#include "stm32l562e_discovery.h"
+#include "stm32l562e_discovery_lcd.h"
+#include "stm32l562e_discovery_ts.h"
+#include "stm32l562e_discovery_sd.h"
+#include "stm32l562e_discovery_ospi.h"
+#include "stm32l562e_discovery_audio.h"
+#include "stm32l562e_discovery_motion_sensors.h"
+#include "stm32_lcd.h"
+
 #include "stm32l5xx_ll_ucpd.h"
 #include "stm32l5xx_ll_bus.h"
 #include "stm32l5xx_ll_cortex.h"
@@ -39,38 +45,21 @@ extern "C" {
 #include "stm32l5xx_ll_pwr.h"
 #include "stm32l5xx_ll_gpio.h"
 #include "stm32l5xx_ll_dma.h"
-
 #include "stm32l5xx_ll_exti.h"
 
 #include "hci_tl_interface.h"
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
-
-/* USER CODE END ET */
-
 /* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
-
-/* USER CODE END EC */
-
 /* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
+/* Exported variables --------------------------------------------------------*/
+extern const unsigned char stlogo[];
+extern __IO FlagStatus UserButtonPressed;
+extern __IO FlagStatus TouchDetected;
 
-/* USER CODE END EM */
-
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
-/* Exported functions prototypes ---------------------------------------------*/
+/* Exported functions ------------------------------------------------------- */
 void Error_Handler(void);
-
-/* USER CODE BEGIN EFP */
-
-/* USER CODE END EFP */
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* Private defines -----------------------------------------------------------*/
 #define LCD_BL_PWM_Pin GPIO_PIN_1
@@ -118,14 +107,11 @@ void Error_Handler(void);
 #define STMOD_SEL_34_GPIO_Port GPIOF
 #define CTP_RST_Pin GPIO_PIN_15
 #define CTP_RST_GPIO_Port GPIOF
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __MAIN_H */
+#endif /* MAIN_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

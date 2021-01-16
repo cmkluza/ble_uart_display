@@ -16,6 +16,8 @@
 
 #include "main.h"
 
+#include "stm32l562e_discovery.h"
+
 #include "ble.h"
 #include "bleuart.h"
 #include "logger.h"
@@ -74,7 +76,7 @@ extern "C" int main_cpp()
     /* Hardware init done by the CubeMX-generated main.c,
      * only need to init app stuff here. */
 
-    logger::init(&huart1);
+    logger::init(&hcom_uart[COM1]);
 
     // Initialize the BLE as a server
     if (!ble::init(Role::SERVER)) {

@@ -1,12 +1,14 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file    stm32l5xx_it.c
-  * @brief   Interrupt Service Routines.
+  * @author  MCD Application Team
+  * @brief   Main Interrupt Service Routines.
+  *          This file provides template for all exceptions handler and
+  *          peripherals interrupt service routine.
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
@@ -16,153 +18,119 @@
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32l5xx_hal.h"
 #include "stm32l5xx_it.h"
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
-/* USER CODE END Includes */
+#include "main.h"
 
 /* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN TD */
-
-/* USER CODE END TD */
-
 /* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
 /* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
 /* Private variables ---------------------------------------------------------*/
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
-
 /* Private function prototypes -----------------------------------------------*/
-/* USER CODE BEGIN PFP */
-
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
+/* Private functions ---------------------------------------------------------*/
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim1;
 
-/* USER CODE BEGIN EV */
-
-/* USER CODE END EV */
-
 /******************************************************************************/
-/*           Cortex Processor Interruption and Exception Handlers          */
+/*            Cortex-M33 Processor Exceptions Handlers                         */
 /******************************************************************************/
+
 /**
-  * @brief This function handles Non maskable interrupt.
+  * @brief  This function handles NMI exception.
+  * @param  None
+  * @retval None
   */
 void NMI_Handler(void)
 {
-  /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
-
-  /* USER CODE END NonMaskableInt_IRQn 0 */
-  /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
-  while (1)
-  {
-  }
-  /* USER CODE END NonMaskableInt_IRQn 1 */
+    while (1)
+    {
+    }
 }
 
 /**
-  * @brief This function handles Hard fault interrupt.
+  * @brief  This function handles Hard Fault exception.
+  * @param  None
+  * @retval None
   */
 void HardFault_Handler(void)
 {
-  /* USER CODE BEGIN HardFault_IRQn 0 */
-
-  /* USER CODE END HardFault_IRQn 0 */
+  /* Go to infinite loop when Hard Fault exception occurs */
   while (1)
   {
-    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
-    /* USER CODE END W1_HardFault_IRQn 0 */
   }
 }
 
 /**
-  * @brief This function handles Memory management fault.
+  * @brief  This function handles Memory Manage exception.
+  * @param  None
+  * @retval None
   */
 void MemManage_Handler(void)
 {
-  /* USER CODE BEGIN MemoryManagement_IRQn 0 */
-
-  /* USER CODE END MemoryManagement_IRQn 0 */
+  /* Go to infinite loop when Memory Manage exception occurs */
   while (1)
   {
-    /* USER CODE BEGIN W1_MemoryManagement_IRQn 0 */
-    /* USER CODE END W1_MemoryManagement_IRQn 0 */
   }
 }
 
 /**
-  * @brief This function handles Prefetch fault, memory access fault.
+  * @brief  This function handles Bus Fault exception.
+  * @param  None
+  * @retval None
   */
 void BusFault_Handler(void)
 {
-  /* USER CODE BEGIN BusFault_IRQn 0 */
-
-  /* USER CODE END BusFault_IRQn 0 */
+  /* Go to infinite loop when Bus Fault exception occurs */
   while (1)
   {
-    /* USER CODE BEGIN W1_BusFault_IRQn 0 */
-    /* USER CODE END W1_BusFault_IRQn 0 */
   }
 }
 
 /**
-  * @brief This function handles Undefined instruction or illegal state.
+  * @brief  This function handles Usage Fault exception.
+  * @param  None
+  * @retval None
   */
 void UsageFault_Handler(void)
 {
-  /* USER CODE BEGIN UsageFault_IRQn 0 */
-
-  /* USER CODE END UsageFault_IRQn 0 */
+  /* Go to infinite loop when Usage Fault exception occurs */
   while (1)
   {
-    /* USER CODE BEGIN W1_UsageFault_IRQn 0 */
-    /* USER CODE END W1_UsageFault_IRQn 0 */
   }
 }
 
 /**
-  * @brief This function handles Debug monitor.
+  * @brief  This function handles Debug Monitor exception.
+  * @param  None
+  * @retval None
   */
 void DebugMon_Handler(void)
 {
-  /* USER CODE BEGIN DebugMonitor_IRQn 0 */
-
-  /* USER CODE END DebugMonitor_IRQn 0 */
-  /* USER CODE BEGIN DebugMonitor_IRQn 1 */
-
-  /* USER CODE END DebugMonitor_IRQn 1 */
+  while (1)
+  {
+  }
 }
 
 /******************************************************************************/
-/* STM32L5xx Peripheral Interrupt Handlers                                    */
-/* Add here the Interrupt Handlers for the used peripherals.                  */
-/* For the available peripheral interrupt handler names,                      */
-/* please refer to the startup file (startup_stm32l5xx.s).                    */
+/*                 STM32L5xx Peripherals Interrupt Handlers                   */
+/*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
+/*  available peripheral interrupt handler's name please refer to the startup */
+/*  file (startup_stm32l5xx.s).                                               */
 /******************************************************************************/
 
-/**
-  * @brief This function handles EXTI line6 interrupt.
-  */
+void EXTI1_IRQHandler(void)
+{
+  BSP_TS_IRQHandler(0);
+}
+
+void EXTI2_IRQHandler(void)
+{
+  BSP_SD_DETECT_IRQHandler(0);
+}
+
 void EXTI6_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI6_IRQn 0 */
@@ -174,9 +142,26 @@ void EXTI6_IRQHandler(void)
   /* USER CODE END EXTI6_IRQn 1 */
 }
 
-/**
-  * @brief This function handles TIM1 update interrupt.
-  */
+void EXTI13_IRQHandler(void)
+{
+  BSP_PB_IRQHandler(BUTTON_USER);
+}
+
+void DMA1_Channel4_IRQHandler(void)
+{ 
+  BSP_AUDIO_IN_IRQHandler(1, AUDIO_IN_DIGITAL_MIC);
+}
+
+void DMA2_Channel1_IRQHandler(void)
+{ 
+  BSP_AUDIO_OUT_IRQHandler(0, AUDIO_OUT_HEADPHONE);
+}
+
+void SDMMC1_IRQHandler(void)
+{
+  BSP_SD_IRQHandler(0);
+}
+
 void TIM1_UP_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_IRQn 0 */
@@ -188,7 +173,4 @@ void TIM1_UP_IRQHandler(void)
   /* USER CODE END TIM1_UP_IRQn 1 */
 }
 
-/* USER CODE BEGIN 1 */
-
-/* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

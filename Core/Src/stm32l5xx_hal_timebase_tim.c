@@ -52,7 +52,6 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   uwTickPrio = TickPriority;
 // CMK: End edit
 
-
   /* Enable the TIM1 global Interrupt */
   HAL_NVIC_EnableIRQ(TIM1_UP_IRQn);
   /* Enable TIM1 clock */
